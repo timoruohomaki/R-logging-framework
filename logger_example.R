@@ -4,11 +4,16 @@
 
 # Load the modules directly for specific logging needs
 # Option 1: Use only file logging
-source("R/utils/file_logger.R")
+
+source("utils/file_logger.R")
+
+# create local log data folder 
+
+if(!file.exists("./log")){dir.create("./log")}
 
 # Initialize file logging only
 initialize_file_logger(
-  log_file = "application.log",
+  log_file = "log/application.log",
   append = TRUE,
   log_to_console = TRUE,
   level = "INFO"
@@ -26,14 +31,14 @@ set_log_file("another_log.log", append = FALSE)
 log_info("This message goes to the new log file")
 
 # Option 2: Use only syslog logging
-source("R/utils/syslog_logger.R")
+source("utils/syslog_logger.R")
 
 # Initialize syslog only
 initialize_syslog(
-  host = "127.0.0.1",  # Local syslog server
+  host = "10.0.58",  # Local syslog server
   port = 514,
   facility = 1,        # User-level messages
-  app_name = "my-application",
+  app_name = "r-app-to-syslog-test",
   level = "INFO",
   rfc5424 = TRUE       # Use modern format
 )
@@ -49,12 +54,12 @@ syslog_warn("This warning uses the older RFC3164 format")
 close_syslog()
 
 # Option 3: Use the combined logger for both
-source("R/utils/logger.R")  # This loads both modules
+source("utils/logger.R")  # This loads both modules
 
 # Initialize both logging systems
 initialize_logger(
-  log_file = "combined.log",
-  syslog_host = "127.0.0.1",
+  log_file = "log/combined.log",
+  syslog_host = "10.0.2.58",
   syslog_port = 514,
   level = "INFO",
   app_name = "combined-logger-example"
@@ -70,7 +75,7 @@ close_logger()
 
 # Advanced usage: Selectively enable/disable logging systems
 initialize_logger(
-  log_file = "selective.log",  # Enable file logging
+  log_file = "log/selective.log",  # Enable file logging
   syslog_host = NULL           # Disable syslog
 )
 
@@ -78,7 +83,7 @@ log_info("This message only goes to the file log")
 
 # Later enable syslog too
 initialize_syslog(
-  host = "127.0.0.1",
+  host = "10.0.2.58",
   port = 514,
   app_name = "dynamic-logger"
 )

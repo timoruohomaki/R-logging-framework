@@ -1,0 +1,9 @@
+==========================================================
+Log started at 2025-04-06 10:33:19
+R version: R version 4.4.3 (2025-02-28 ucrt)
+Platform: x86_64-w64-mingw32
+Working directory: C:/Users/timor/LocalGit/R-logging-framework
+Log level: INFO
+==========================================================
+[2025-04-06 10:33:19] [INFO] This message only goes to the file log
+[2025-04-06 10:33:19] [DEBUG] Now this debug message will appear
