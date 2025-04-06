@@ -1,1 +1,3 @@
-# R-logging-framework
+# R Logging Framework
+
+> [!NOTE]
