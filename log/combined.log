@@ -1,12 +1,13 @@
 ==========================================================
-Log started at 2025-04-06 12:03:25
+Log started at 2025-04-06 12:03:34
 R version: R version 4.4.3 (2025-02-28 ucrt)
 Platform: x86_64-w64-mingw32
 Working directory: C:/Users/timor/LocalGit/R-logging-framework
 Log level: INFO
 ==========================================================
-[2025-04-06 12:03:25] [INFO] This message only goes to the file log
-[2025-04-06 12:03:25] [DEBUG] Now this debug message will appear
+[2025-04-06 12:03:36] [INFO] This message goes to both loggers
+[2025-04-06 12:03:38] [WARN] This warning appears in both systems
+[2025-04-06 12:03:40] [ERROR] This error is logged everywhere
 ==========================================================
 Log started at 2025-04-06 12:04:58
 R version: R version 4.4.3 (2025-02-28 ucrt)
@@ -14,5 +15,6 @@ Platform: x86_64-w64-mingw32
 Working directory: C:/Users/timor/LocalGit/R-logging-framework
 Log level: INFO
 ==========================================================
-[2025-04-06 12:04:58] [INFO] This message only goes to the file log
-[2025-04-06 12:04:58] [DEBUG] Now this debug message will appear
+[2025-04-06 12:04:59] [INFO] This message goes to both loggers
+[2025-04-06 12:04:59] [WARN] This warning appears in both systems
+[2025-04-06 12:04:59] [ERROR] This error is logged everywhere

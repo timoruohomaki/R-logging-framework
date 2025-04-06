@@ -2,6 +2,15 @@
 #
 # This script demonstrates how to use the split logging modules
 
+# Testing connectivity
+
+# Check available network interfaces
+if (.Platform$OS.type == "windows") {
+  system("ipconfig /all")
+} else {
+  system("ifconfig -a || ip addr")
+}
+
 # Load the modules directly for specific logging needs
 # Option 1: Use only file logging
 
@@ -27,15 +36,15 @@ set_log_level("DEBUG")
 log_debug("Now this debug message will appear")
 
 # Change the log file
-set_log_file("another_log.log", append = FALSE)
+set_log_file("log/another_log.log", append = FALSE)
 log_info("This message goes to the new log file")
 
 # Option 2: Use only syslog logging
-source("utils/syslog_logger.R")
+source("utils/syslog_logger_simplified.R")
 
 # Initialize syslog only
 initialize_syslog(
-  host = "10.0.58",  # Local syslog server
+  host = "10.0.2.58",  # Local syslog server
   port = 514,
   facility = 1,        # User-level messages
   app_name = "r-app-to-syslog-test",

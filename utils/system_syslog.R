@@ -1,16 +1,19 @@
-# syslog_logger.R - Syslog Logging Module
-#
-# Functions for logging to syslog via UDP
+# system_syslog.R - System Command-based Syslog Implementation
 
 # Create environment to store syslog configuration
 if (!exists("syslog_env", envir = .GlobalEnv)) {
   assign("syslog_env", new.env(), envir = .GlobalEnv)
   syslog_env$enabled <- FALSE
-  syslog_env$connection <- NULL
+  syslog_env$host <- NULL
+  syslog_env$port <- NULL
   syslog_env$facility <- 1  # user-level messages (default)
   syslog_env$hostname <- Sys.info()["nodename"]
   syslog_env$app_name <- "r-application"
   syslog_env$log_level <- "INFO"  # Default level
+  syslog_env$rfc5424 <- TRUE
+  
+  # Set the system type explicitly
+  syslog_env$system_type <- ifelse(.Platform$OS.type == "windows", "windows", "unix")
 }
 
 # Define log levels and their hierarchy
@@ -43,7 +46,7 @@ map_level_to_severity <- function(level) {
          SYSLOG_SEVERITY$NOTICE)  # default
 }
 
-#' Initialize syslog connection
+#' Initialize syslog settings
 #' 
 #' @param host Syslog server host
 #' @param port Syslog server port
@@ -51,7 +54,7 @@ map_level_to_severity <- function(level) {
 #' @param app_name Application name to appear in syslog
 #' @param level Minimum log level to record (DEBUG, INFO, WARN, ERROR)
 #' @param rfc5424 Whether to use RFC5424 format (TRUE) or RFC3164 format (FALSE)
-#' @return TRUE if connection successful, FALSE otherwise
+#' @return TRUE if initialized successfully
 initialize_syslog <- function(host = "127.0.0.1", 
                               port = 514, 
                               facility = 1, 
@@ -66,76 +69,35 @@ initialize_syslog <- function(host = "127.0.0.1",
     level <- "INFO"
   }
   
-  tryCatch({
-    # Close any existing connection
-    if (!is.null(syslog_env$connection) && isOpen(syslog_env$connection)) {
-      close(syslog_env$connection)
-    }
-    
-    # Create a new UDP connection
-    conn <- socketConnection(
-      host = host,
-      port = port,
-      server = FALSE,
-      blocking = FALSE,
-      open = "w",
-      udp = TRUE
-    )
-    
-    syslog_env$connection <- conn
-    syslog_env$enabled <- TRUE
-    syslog_env$facility <- facility
-    syslog_env$app_name <- app_name
-    syslog_env$hostname <- Sys.info()["nodename"]
-    syslog_env$rfc5424 <- rfc5424
-    syslog_env$log_level <- level
-    
-    # Log a test message
-    message <- paste("Syslog connection initialized for", app_name)
-    syslog_info(message)
-    
-    return(TRUE)
-  }, error = function(e) {
-    warning(paste("Failed to initialize syslog connection:", e$message))
+  # Store configuration
+  syslog_env$host <- host
+  syslog_env$port <- port
+  syslog_env$enabled <- TRUE
+  syslog_env$facility <- facility
+  syslog_env$app_name <- app_name
+  syslog_env$hostname <- Sys.info()["nodename"]
+  syslog_env$rfc5424 <- rfc5424
+  syslog_env$log_level <- level
+  
+  # Test if we can send a message
+  test_result <- send_udp_message(host, port, 
+                                  format_syslog_message("INFO", "Syslog initialized"))
+  
+  if (!test_result) {
+    warning("Failed to send test message to syslog server")
     syslog_env$enabled <- FALSE
     return(FALSE)
-  })
-}
-
-#' Close syslog connection
-#' 
-#' @return TRUE if closed successfully, FALSE otherwise
-close_syslog <- function() {
-  if (!is.null(syslog_env$connection) && isOpen(syslog_env$connection)) {
-    tryCatch({
-      close(syslog_env$connection)
-      syslog_env$enabled <- FALSE
-      return(TRUE)
-    }, error = function(e) {
-      warning(paste("Failed to close syslog connection:", e$message))
-      return(FALSE)
-    })
   }
+  
   return(TRUE)
 }
 
-#' Send a message to syslog
+#' Format a syslog message according to the chosen format
 #' 
 #' @param level Log level
-#' @param message Message to log
-#' @return TRUE if sent successfully, FALSE otherwise
-send_to_syslog <- function(level, message) {
-  if (!syslog_env$enabled || is.null(syslog_env$connection) || !isOpen(syslog_env$connection)) {
-    return(FALSE)
-  }
-  
-  level <- toupper(level)
-  
-  # Check if we should log this level
-  if (SYSLOG_LOG_LEVELS[[level]] < SYSLOG_LOG_LEVELS[[syslog_env$log_level]]) {
-    return(invisible(FALSE))
-  }
-  
+#' @param message Message content
+#' @return Formatted syslog message
+format_syslog_message <- function(level, message) {
   severity <- map_level_to_severity(level)
   
   # Calculate PRI value: (facility * 8) + severity
@@ -164,13 +126,92 @@ send_to_syslog <- function(level, message) {
                           Sys.getpid(), message)
   }
   
-  tryCatch({
-    writeLines(syslog_msg, syslog_env$connection)
-    return(TRUE)
-  }, error = function(e) {
-    warning(paste("Failed to send message to syslog:", e$message))
+  return(syslog_msg)
+}
+
+#' Send a UDP message using system commands
+#' 
+#' @param host Destination host
+#' @param port Destination port
+#' @param message Message to send
+#' @return TRUE if successful, FALSE otherwise
+#' 
+
+send_udp_message <- function(host, port, message) {
+  # Create a temporary file with the message
+  tmp_file <- tempfile()
+  writeLines(message, tmp_file)
+  
+  success <- FALSE
+  
+  # Try Windows PowerShell first if on Windows
+  if (.Platform$OS.type == "windows") {
+    safe_message <- gsub("'", "''", message)
+    ps_cmd <- sprintf(
+      "$socket = New-Object System.Net.Sockets.UdpClient; $socket.Connect('%s', %d); $bytes = [System.Text.Encoding]::ASCII.GetBytes('%s'); $socket.Send($bytes, $bytes.Length) | Out-Null; $socket.Close()",
+      host, port, safe_message
+    )
+    
+    tryCatch({
+      system(paste("powershell -Command", shQuote(ps_cmd)), intern = TRUE, ignore.stderr = TRUE)
+      success <- TRUE
+    }, error = function(e) {
+      warning("PowerShell UDP method failed, trying alternatives")
+    })
+  }
+  
+  # If not successful yet, try Unix methods
+  if (!success) {
+    methods <- list(
+      nc = sprintf("cat %s | nc -u %s %d 2>/dev/null", tmp_file, host, port),
+      socat = sprintf("socat - UDP:%s:%d < %s 2>/dev/null", host, port, tmp_file),
+      netcat = sprintf("cat %s | netcat -u %s %d 2>/dev/null", tmp_file, host, port)
+    )
+    
+    for (name in names(methods)) {
+      cmd <- methods[[name]]
+      result <- tryCatch({
+        system(cmd, ignore.stderr = TRUE)
+      }, error = function(e) {
+        warning(paste("Command failed:", name))
+        return(1)
+      })
+      
+      if (result == 0) {
+        success <- TRUE
+        break
+      }
+    }
+  }
+  
+  # Clean up
+  unlink(tmp_file)
+  return(success)
+}
+
+
+#' Send a message to syslog
+#' 
+#' @param level Log level
+#' @param message Message to log
+#' @return TRUE if sent successfully, FALSE otherwise
+send_to_syslog <- function(level, message) {
+  if (!syslog_env$enabled || is.null(syslog_env$host) || is.null(syslog_env$port)) {
     return(FALSE)
-  })
+  }
+  
+  level <- toupper(level)
+  
+  # Check if we should log this level
+  if (SYSLOG_LOG_LEVELS[[level]] < SYSLOG_LOG_LEVELS[[syslog_env$log_level]]) {
+    return(invisible(FALSE))
+  }
+  
+  # Format the message
+  syslog_msg <- format_syslog_message(level, message)
+  
+  # Send the message
+  return(send_udp_message(syslog_env$host, syslog_env$port, syslog_msg))
 }
 
 #' Log a debug message to syslog
@@ -237,4 +278,12 @@ set_syslog_format <- function(rfc5424 = TRUE) {
 #' @return TRUE if syslog is enabled, FALSE otherwise
 is_syslog_enabled <- function() {
   return(syslog_env$enabled)
+}
+
+#' Close syslog (disables syslog logging)
+#' 
+#' @return Always returns TRUE
+close_syslog <- function() {
+  syslog_env$enabled <- FALSE
+  return(TRUE)
 }
