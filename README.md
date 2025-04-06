@@ -7,11 +7,11 @@ Logging framework for R that supports local log files and sending events to sysl
 
 ## Notes on the Implementation:
 
-UDP Connection: This uses UDP which is the traditional transport for syslog. It's connectionless and doesn't guarantee delivery.
-RFC5424 Format: The implementation follows the modern syslog protocol format (RFC5424).
-Error Handling: There's robust error handling to prevent syslog failures from affecting your application.
-Configuration: You can configure the syslog host, port, facility, and application name.
-Level Mapping: The function maps your log levels to standard syslog severity levels.
+* UDP Connection: This uses UDP which is the traditional transport for syslog. It's connectionless and doesn't guarantee delivery.
+* RFC5424 Format: The implementation follows the modern syslog protocol format (RFC5424).
+* Error Handling: There's robust error handling to prevent syslog failures from affecting your application.
+* Configuration: You can configure the syslog host, port, facility, and application name.
+* Level Mapping: The function maps your log levels to standard syslog severity levels.
 
 If you need to support both older BSD syslog format (RFC3164) and newer RFC5424 format, you might want to add a parameter to switch between them based on your syslog server's capabilities.
 
