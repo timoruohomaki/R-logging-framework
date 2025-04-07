@@ -1,0 +1,14 @@
+[2025-04-07 06:57:33] [INFO] Logging to timestamped file: logs/daily/20250407/app_065733.log
+[2025-04-07 06:57:33] [INFO] User logged in: user123
+[2025-04-07 06:57:33] [DEBUG] Session ID: ABC123XYZ
+[2025-04-07 06:57:33] [INFO] Processing file: data.csv
+[2025-04-07 06:57:33] [DEBUG] File size: 1.2 MB, 500 records
+[2025-04-07 06:57:33] [WARN] Some records have missing values
+[2025-04-07 06:57:33] [INFO] Processing completed
+[2025-04-07 06:57:33] [INFO] User logged out: user123
+[2025-04-07 06:57:33] [INFO] Logger closed
+[2025-04-07 06:57:33] [INFO] Starting to process sample.txt
+[2025-04-07 06:57:33] [DEBUG] Reading file contents
+[2025-04-07 06:57:34] [DEBUG] Performing calculations
+[2025-04-07 06:57:34] [DEBUG] Result: 0.95, 0.98, 0.02, 0.11, 0.92
+[2025-04-07 06:57:34] [INFO] Successfully processed sample.txt

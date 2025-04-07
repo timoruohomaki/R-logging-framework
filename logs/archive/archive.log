@@ -1,0 +1,3 @@
+[2025-04-07 06:57:33] [INFO] This message goes to logs/archive/archive.log
+[2025-04-07 06:57:33] [INFO] This message only goes to the log file, not the console
+[2025-04-07 06:57:33] [INFO] This message goes to both the log file and the console

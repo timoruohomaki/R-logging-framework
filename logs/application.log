@@ -1,0 +1,13 @@
+==========================================================
+Log started at 2025-04-07 06:57:33
+R version: R version 4.4.2 (2024-10-31)
+Platform: aarch64-apple-darwin20
+Working directory: /Users/timo/LocalGit/R-logging-framework
+Log directory: /Users/timo/LocalGit/R-logging-framework/logs
+Log file: application.log
+Log level: INFO
+==========================================================
+[2025-04-07 06:57:33] [INFO] Application started
+[2025-04-07 06:57:33] [WARN] Warning: disk space is running low
+[2025-04-07 06:57:33] [ERROR] Error: could not connect to database
+[2025-04-07 06:57:33] [DEBUG] Now this debug message will appear
